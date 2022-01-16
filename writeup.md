@@ -23,7 +23,7 @@ The goals / steps of this project are the following:
 
 ### 1. Describe your pipeline. As part of the description, explain how you modified the draw_lines() function.
 
-My pipeline consisted of 7 steps. These steps are described in detail in the sections below:
+My pipeline consisted of 8 steps. These steps are described in detail in the sections below:
 
   ### 1. Color Selection and Thresholding
   The first step in this section was to identify and select the colours to be used in thresholding. Clearly, the key colours for lane detection are yellow and white. A new helper function titled ```thresholding()``` was declared for this task. Using HSV for the yellow thresholding and RGB for the white thresholding, upper and lower boundaries were set from which appropriate masks were created. Using the ```bitwise_and()``` function, a yellow image and white image were both created from masking the original image using their respective colour ranges. These can be seen in the two images below (Yellow above, White below):
@@ -66,7 +66,7 @@ My pipeline consisted of 7 steps. These steps are described in detail in the sec
   ### 8. Line Fitting (Identifying a Line of Best Fit)
   The last step was to identify a line of best fit for each classified segment of lines, and finally project those lines onto the original image using the ```weighted_img()``` helper function.
 
-  To do this, I customized a helper function titled ```regression_ransac()```. Focusing on one lane at a time, I sent all the obtained coordinates for that lane from the given frame and used the ```bumpy.polyfit()``` function to find a line of best fit. After finding this initial line, I used the ```RANSACRegressor()``` function supplied from sklearn which helped me to identify which coordinates were inliers or outliers. With this information, I repeated the initial steps in this function to find a new refined line of best fit that applied to only the inliers for each lane. Using this finalized line, I obtained the minimum and maximum coordinates on it and once again returned the x1, y1, x2, y2 coordinates of the line.
+  To do this, I customized a helper function titled ```regression_ransac()```. Focusing on one lane at a time, I sent all the obtained coordinates for that lane from the given frame and used the ```numpy.polyfit()``` function to find a line of best fit. After finding this initial line, I used the ```RANSACRegressor()``` function supplied from sklearn which helped me to identify which coordinates were inliers or outliers. With this information, I repeated the initial steps in this function to find a new refined line of best fit that applied to only the inliers for each lane. Using this finalized line, I obtained the minimum and maximum coordinates on it and once again returned the x1, y1, x2, y2 coordinates of the line.
 
   These values were fed back to the ```draw_lines()``` function it was called from, at which point I used the new slope and coordinates to extrapolate the line from the bottom of the image to the top of the RoI. This was done using my customized ```hough_to_image()``` function which applied a hough transformation using the slope and intersect and returned it to the image space. This pair of coordinates representing each extrapolated line was finally mapped to the real image using the ```weighted_img()``` function.
 
