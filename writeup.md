@@ -51,17 +51,26 @@ My pipeline consisted of 7 steps. These steps are described in detail in the sec
   
   ![roi](https://user-images.githubusercontent.com/64507102/149541786-415a4193-3418-4318-b949-a7b3f5c5d55d.png)
 
-  ### 6. Hough Line Detection (Line segment detection)
-  This step was crucial in identifying the actual lines to draw. The ```hough_lines``` function was left mostly untouched, however the ```draw_lines``` function called within it was modified heavily.
-  
-  In order to identify the best left and right lines to plot for the hough lines, a rolling average for the left and right slope is calculated continuously based on the present line coordinates (x1, x2, y1, y2) available at any given frame. Using these lines and their coordinates, the slope and hough intersect (b value) are constantly calculated. With these values, I am able to distinguish whether a line is contributing to the left or right side based off the slope (a negative slope value indicates it is a left lane, whereas a positive slope value indicates a right lane - this is because the figure plots are inverted in the Y-axis of each image, making the slopes backwards). In addition to using slopes to distinguish between the sides, the average intersect is used with the slope to move the lines from the Hough space back to the Image space. Given a set of coordinates mapping to a singular line allows me to plot the most accurate and point-awarded line possible at any given frame.
+  ### 6. Hough Line Segment Detection (Line segment detection)
+  Using the given Hough functions from OpenCV, hough lines were obtained from the canny edges in the region of interest. These lines all had a set of two cartesian coordinates (x1, y1, x2, y2) from which I was able to identify the starting and ending points of each line. This enabled me to use the slope and intersect points which you will understand in the next steps below.
   
   A depiction of the hough lines of a single frame can be seen in the image below:
   
   ![hough](https://user-images.githubusercontent.com/64507102/149543037-97440cb7-8cc7-4482-ab8e-ff2dedc9501a.png)
 
-  ### 7. Line Fitting (Projecting the Hough Lines)
-  The last step is project the hough lines onto the original image using the ```weighted_img``` helper function. This final depiction of lane line tracking can be seen below:
+  ### 7. Line Segment Classification (Identifying left & right lanes)
+  The first step in mapping the hough lines to applicable lines was classifying each line to a left or right segment. Using the start and end coordinates for each line obtained, I was able to determine if a slope was positive or negative, thus confirming whether each line belonged to the right or left lane, respectively, at any given frame.
+
+   This was done in the ```draw_lines()``` function.
+
+  ### 8. Line Fitting (Identifying a Line of Best Fit)
+  The last step was to identify a line of best fit for each classified segment of lines, and finally project those lines onto the original image using the ```weighted_img()``` helper function.
+
+  To do this, I customized a helper function titled ```regression_ransac()```. Focusing on one lane at a time, I sent all the obtained coordinates for that lane from the given frame and used the ```bumpy.polyfit()``` function to find a line of best fit. After finding this initial line, I used the ```RANSACRegressor()``` function supplied from sklearn which helped me to identify which coordinates were inliers or outliers. With this information, I repeated the initial steps in this function to find a new refined line of best fit that applied to only the inliers for each lane. Using this finalized line, I obtained the minimum and maximum coordinates on it and once again returned the x1, y1, x2, y2 coordinates of the line.
+
+  These values were fed back to the ```draw_lines()``` function it was called from, at which point I used the new slope and coordinates to extrapolate the line from the bottom of the image to the top of the RoI. This was done using my customized ```hough_to_image()``` function which applied a hough transformation using the slope and intersect and returned it to the image space. This pair of coordinates representing each extrapolated line was finally mapped to the real image using the ```weighted_img()``` function.
+
+  This final depiction of lane line tracking can be seen below:
   
   ![1](https://user-images.githubusercontent.com/64507102/149543507-6527679c-7ad2-46e1-9daf-e3da68ce18cb.png)
 
